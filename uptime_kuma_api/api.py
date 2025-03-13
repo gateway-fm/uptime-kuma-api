@@ -26,7 +26,7 @@ from . import (
     Timeout,
     UptimeKumaException,
     notification_provider_conditions,
-    notification_provider_options
+    notification_provider_options,
 )
 
 from .docstrings import (
@@ -36,7 +36,7 @@ from .docstrings import (
     monitor_docstring,
     notification_docstring,
     proxy_docstring,
-    tag_docstring
+    tag_docstring,
 )
 
 
@@ -108,12 +108,14 @@ def parse_proxy_protocol(data) -> None:
 
 def gen_secret(length: int) -> str:
     chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
-    return ''.join(random.choice(chars) for _ in range(length))
+    return "".join(random.choice(chars) for _ in range(length))
 
 
 def _convert_monitor_return(monitor) -> None:
     if isinstance(monitor["notificationIDList"], dict):
-        monitor["notificationIDList"] = [int(i) for i in monitor["notificationIDList"].keys()]
+        monitor["notificationIDList"] = [
+            int(i) for i in monitor["notificationIDList"].keys()
+        ]
 
 
 def _convert_monitor_input(kwargs) -> None:
@@ -128,15 +130,23 @@ def _convert_monitor_input(kwargs) -> None:
 
     if not kwargs["databaseConnectionString"]:
         if kwargs["type"] == MonitorType.SQLSERVER:
-            kwargs["databaseConnectionString"] = "Server=<hostname>,<port>;Database=<your database>;User Id=<your user id>;Password=<your password>;Encrypt=<true/false>;TrustServerCertificate=<Yes/No>;Connection Timeout=<int>"
+            kwargs["databaseConnectionString"] = (
+                "Server=<hostname>,<port>;Database=<your database>;User Id=<your user id>;Password=<your password>;Encrypt=<true/false>;TrustServerCertificate=<Yes/No>;Connection Timeout=<int>"
+            )
         elif kwargs["type"] == MonitorType.POSTGRES:
-            kwargs["databaseConnectionString"] = "postgres://username:password@host:port/database"
+            kwargs["databaseConnectionString"] = (
+                "postgres://username:password@host:port/database"
+            )
         elif kwargs["type"] == MonitorType.MYSQL:
-            kwargs["databaseConnectionString"] = "mysql://username:password@host:port/database"
+            kwargs["databaseConnectionString"] = (
+                "mysql://username:password@host:port/database"
+            )
         elif kwargs["type"] == MonitorType.REDIS:
             kwargs["databaseConnectionString"] = "redis://user:password@host:port"
         elif kwargs["type"] == MonitorType.MONGODB:
-            kwargs["databaseConnectionString"] = "mongodb://username:password@host:port/database"
+            kwargs["databaseConnectionString"] = (
+                "mongodb://username:password@host:port/database"
+            )
 
     if kwargs["type"] == MonitorType.PUSH and not kwargs.get("pushToken"):
         kwargs["pushToken"] = gen_secret(10)
@@ -147,7 +157,7 @@ def _build_notification_data(
     type: NotificationType,
     isDefault: bool = False,
     applyExisting: bool = False,
-    **kwargs
+    **kwargs,
 ) -> dict:
     allowed_kwargs = []
     for keys in notification_provider_options.values():
@@ -162,7 +172,7 @@ def _build_notification_data(
         "type": type,
         "isDefault": isDefault,
         "applyExisting": applyExisting,
-        **kwargs
+        **kwargs,
     }
     return data
 
@@ -187,7 +197,7 @@ def _build_proxy_data(
         "password": password,
         "active": active,
         "default": default,
-        "applyExisting": applyExisting
+        "applyExisting": applyExisting,
     }
     return data
 
@@ -201,27 +211,14 @@ def _convert_docker_host_input(kwargs) -> None:
 
 
 def _build_docker_host_data(
-    name: str,
-    dockerType: DockerType,
-    dockerDaemon: str = None
+    name: str, dockerType: DockerType, dockerDaemon: str = None
 ) -> dict:
-    data = {
-        "name": name,
-        "dockerType": dockerType,
-        "dockerDaemon": dockerDaemon
-    }
+    data = {"name": name, "dockerType": dockerType, "dockerDaemon": dockerDaemon}
     return data
 
 
-def _build_tag_data(
-    name: str,
-    color: str
-) -> dict:
-    data = {
-        "new": True,
-        "name": name,
-        "color": color
-    }
+def _build_tag_data(name: str, color: str) -> dict:
+    data = {"new": True, "name": name, "color": color}
     return data
 
 
@@ -232,7 +229,9 @@ def _check_missing_arguments(required_params, kwargs) -> None:
             missing_arguments.append(required_param)
     if missing_arguments:
         missing_arguments_str = ", ".join([f"'{i}'" for i in missing_arguments])
-        raise TypeError(f"missing {len(missing_arguments)} required argument: {missing_arguments_str}")
+        raise TypeError(
+            f"missing {len(missing_arguments)} required argument: {missing_arguments_str}"
+        )
 
 
 def _check_argument_conditions(valid_params, kwargs) -> None:
@@ -245,19 +244,17 @@ def _check_argument_conditions(valid_params, kwargs) -> None:
             min_ = conditions.get("min")
             max_ = conditions.get("max")
             if min_ is not None and value < min_:
-                raise ValueError(f"the value of {valid_param} must not be less than {min_}")
+                raise ValueError(
+                    f"the value of {valid_param} must not be less than {min_}"
+                )
             if max_ is not None and value > max_:
-                raise ValueError(f"the value of {valid_param} must not be larger than {max_}")
+                raise ValueError(
+                    f"the value of {valid_param} must not be larger than {max_}"
+                )
 
 
 def _check_arguments_monitor(kwargs) -> None:
-    required_args = [
-        "type",
-        "name",
-        "interval",
-        "maxretries",
-        "retryInterval"
-    ]
+    required_args = ["type", "name", "interval", "maxretries", "retryInterval"]
     _check_missing_arguments(required_args, kwargs)
 
     required_args_by_type = {
@@ -265,7 +262,12 @@ def _check_arguments_monitor(kwargs) -> None:
         MonitorType.PORT: ["hostname", "port"],
         MonitorType.PING: ["hostname"],
         MonitorType.KEYWORD: ["url", "keyword", "maxredirects"],
-        MonitorType.GRPC_KEYWORD: ["grpcUrl", "keyword", "grpcServiceName", "grpcMethod"],
+        MonitorType.GRPC_KEYWORD: [
+            "grpcUrl",
+            "keyword",
+            "grpcServiceName",
+            "grpcMethod",
+        ],
         MonitorType.DNS: ["hostname", "dns_resolve_server", "port"],
         MonitorType.DOCKER: ["docker_container", "docker_host"],
         MonitorType.PUSH: [],
@@ -276,7 +278,13 @@ def _check_arguments_monitor(kwargs) -> None:
         MonitorType.POSTGRES: [],
         MonitorType.MYSQL: [],
         MonitorType.MONGODB: [],
-        MonitorType.RADIUS: ["radiusUsername", "radiusPassword", "radiusSecret", "radiusCalledStationId", "radiusCallingStationId"],
+        MonitorType.RADIUS: [
+            "radiusUsername",
+            "radiusPassword",
+            "radiusSecret",
+            "radiusCalledStationId",
+            "radiusCallingStationId",
+        ],
         MonitorType.REDIS: [],
         MonitorType.GROUP: [],
         MonitorType.JSON_QUERY: ["url", "jsonPath", "expectedValue"],
@@ -314,13 +322,13 @@ def _check_arguments_monitor(kwargs) -> None:
         "300-399",
         "400-499",
         "500-599",
-    ] + [
-        str(i) for i in range(100, 999 + 1)
-    ]
+    ] + [str(i) for i in range(100, 999 + 1)]
     accepted_statuscodes = kwargs["accepted_statuscodes"]
     for accepted_statuscode in accepted_statuscodes:
         if accepted_statuscode not in allowed_accepted_statuscodes:
-            raise ValueError(f"Unknown accepted_statuscodes value: {allowed_accepted_statuscodes}")
+            raise ValueError(
+                f"Unknown accepted_statuscodes value: {allowed_accepted_statuscodes}"
+            )
 
     dns_resolve_type = kwargs["dns_resolve_type"]
     if dns_resolve_type not in [
@@ -338,7 +346,9 @@ def _check_arguments_monitor(kwargs) -> None:
         raise ValueError(f"Unknown dns_resolve_type value: {dns_resolve_type}")
 
     if type_ == MonitorType.KAFKA_PRODUCER:
-        kafkaProducerSaslOptions_mechanism = kwargs["kafkaProducerSaslOptions"]["mechanism"]
+        kafkaProducerSaslOptions_mechanism = kwargs["kafkaProducerSaslOptions"][
+            "mechanism"
+        ]
         if kafkaProducerSaslOptions_mechanism not in [
             "None",
             "plain",
@@ -346,7 +356,9 @@ def _check_arguments_monitor(kwargs) -> None:
             "scram-sha-512",
             "aws",
         ]:
-            raise ValueError(f"Unknown kafkaProducerSaslOptions[\"mechanism\"] value: {kafkaProducerSaslOptions_mechanism}")
+            raise ValueError(
+                f'Unknown kafkaProducerSaslOptions["mechanism"] value: {kafkaProducerSaslOptions_mechanism}'
+            )
 
 
 def _check_arguments_notification(kwargs) -> None:
@@ -354,7 +366,9 @@ def _check_arguments_notification(kwargs) -> None:
     _check_missing_arguments(required_args, kwargs)
 
     type_ = kwargs["type"]
-    required_args = [i for i, j in notification_provider_options[type_].items() if j["required"]]
+    required_args = [
+        i for i, j in notification_provider_options[type_].items() if j["required"]
+    ]
     _check_missing_arguments(required_args, kwargs)
     _check_argument_conditions(notification_provider_conditions, kwargs)
 
@@ -379,7 +393,11 @@ def _check_arguments_maintenance(kwargs) -> None:
     _check_missing_arguments(required_args, kwargs)
 
     strategy = kwargs["strategy"]
-    if strategy in [MaintenanceStrategy.RECURRING_INTERVAL, MaintenanceStrategy.RECURRING_WEEKDAY, MaintenanceStrategy.RECURRING_DAY_OF_MONTH]:
+    if strategy in [
+        MaintenanceStrategy.RECURRING_INTERVAL,
+        MaintenanceStrategy.RECURRING_WEEKDAY,
+        MaintenanceStrategy.RECURRING_DAY_OF_MONTH,
+    ]:
         required_args = ["dateRange"]
         _check_missing_arguments(required_args, kwargs)
 
@@ -393,10 +411,7 @@ def _check_arguments_maintenance(kwargs) -> None:
 
 
 def _check_arguments_tag(kwargs) -> None:
-    required_args = [
-        "name",
-        "color"
-    ]
+    required_args = ["name", "color"]
     _check_missing_arguments(required_args, kwargs)
 
 
@@ -457,13 +472,14 @@ class UptimeKumaApi(object):
                               it is assumed that it was the last message. Defaults is ``0.2``.
     :raises UptimeKumaException: When connection to server failed.
     """
+
     def __init__(
-            self,
-            url: str,
-            timeout: float = 10,
-            headers: dict = None,
-            ssl_verify: bool = True,
-            wait_events: float = 0.2
+        self,
+        url: str,
+        timeout: float = 10,
+        headers: dict = None,
+        ssl_verify: bool = True,
+        wait_events: float = 0.2,
     ) -> None:
         self.url = url.rstrip("/")
         self.timeout = timeout
@@ -485,7 +501,7 @@ class UptimeKumaApi(object):
             Event.DOCKER_HOST_LIST: None,
             Event.AUTO_LOGIN: None,
             Event.MAINTENANCE_LIST: None,
-            Event.API_KEY_LIST: None
+            Event.API_KEY_LIST: None,
         }
 
         self.sio.on(Event.CONNECT, self._event_connect)
@@ -495,7 +511,9 @@ class UptimeKumaApi(object):
         self.sio.on(Event.PROXY_LIST, self._event_proxy_list)
         self.sio.on(Event.STATUS_PAGE_LIST, self._event_status_page_list)
         self.sio.on(Event.HEARTBEAT_LIST, self._event_heartbeat_list)
-        self.sio.on(Event.IMPORTANT_HEARTBEAT_LIST, self._event_important_heartbeat_list)
+        self.sio.on(
+            Event.IMPORTANT_HEARTBEAT_LIST, self._event_important_heartbeat_list
+        )
         self.sio.on(Event.AVG_PING, self._event_avg_ping)
         self.sio.on(Event.UPTIME, self._event_uptime)
         self.sio.on(Event.HEARTBEAT, self._event_heartbeat)
@@ -531,7 +549,14 @@ class UptimeKumaApi(object):
                 time.sleep(0.01)
 
     def _get_event_data(self, event) -> Any:
-        monitor_events = [Event.AVG_PING, Event.UPTIME, Event.HEARTBEAT_LIST, Event.IMPORTANT_HEARTBEAT_LIST, Event.CERT_INFO, Event.HEARTBEAT]
+        monitor_events = [
+            Event.AVG_PING,
+            Event.UPTIME,
+            Event.HEARTBEAT_LIST,
+            Event.IMPORTANT_HEARTBEAT_LIST,
+            Event.CERT_INFO,
+            Event.HEARTBEAT,
+        ]
         timestamp = time.time()
         while self._event_data[event] is None:
             if time.time() - timestamp > self.timeout:
@@ -586,7 +611,10 @@ class UptimeKumaApi(object):
 
         if self._event_data[Event.IMPORTANT_HEARTBEAT_LIST] is None:
             self._event_data[Event.IMPORTANT_HEARTBEAT_LIST] = {}
-        if monitor_id not in self._event_data[Event.IMPORTANT_HEARTBEAT_LIST] or overwrite:
+        if (
+            monitor_id not in self._event_data[Event.IMPORTANT_HEARTBEAT_LIST]
+            or overwrite
+        ):
             self._event_data[Event.IMPORTANT_HEARTBEAT_LIST][monitor_id] = data
         else:
             self._event_data[Event.IMPORTANT_HEARTBEAT_LIST][monitor_id].append(data)
@@ -623,7 +651,9 @@ class UptimeKumaApi(object):
                 self._event_data[Event.IMPORTANT_HEARTBEAT_LIST] = {}
             if monitor_id not in self._event_data[Event.IMPORTANT_HEARTBEAT_LIST]:
                 self._event_data[Event.IMPORTANT_HEARTBEAT_LIST][monitor_id] = []
-            self._event_data[Event.IMPORTANT_HEARTBEAT_LIST][monitor_id] = [data] + self._event_data[Event.IMPORTANT_HEARTBEAT_LIST][monitor_id]
+            self._event_data[Event.IMPORTANT_HEARTBEAT_LIST][monitor_id] = [
+                data
+            ] + self._event_data[Event.IMPORTANT_HEARTBEAT_LIST][monitor_id]
 
     def _event_info(self, data) -> None:
         if "version" not in data:
@@ -664,7 +694,11 @@ class UptimeKumaApi(object):
         :raises UptimeKumaException: When connection to server failed.
         """
         try:
-            self.sio.connect(f'{self.url}/socket.io/', wait_timeout=self.timeout, headers=self.headers)
+            self.sio.connect(
+                f"{self.url}/socket.io/",
+                wait_timeout=self.timeout,
+                headers=self.headers,
+            )
         except:
             raise UptimeKumaException("unable to connect")
 
@@ -684,112 +718,95 @@ class UptimeKumaApi(object):
         return info.get("version")
 
     def _build_monitor_data(
-            self,
-            type: MonitorType,
-            name: str,
-            parent: int = None,
-            description: str = None,
-            interval: int = 60,
-            retryInterval: int = 60,
-            resendInterval: int = 0,
-            maxretries: int = 1,
-            upsideDown: bool = False,
-            notificationIDList: list = None,
-            httpBodyEncoding: str = "json",
-
-            # HTTP, KEYWORD, JSON_QUERY, REAL_BROWSER
-            url: str = None,
-
-            # HTTP, KEYWORD, GRPC_KEYWORD
-            maxredirects: int = 10,
-            accepted_statuscodes: list[str] = None,
-
-            # HTTP, KEYWORD, JSON_QUERY
-            expiryNotification: bool = False,
-            ignoreTls: bool = False,
-            proxyId: int = None,
-            method: str = "GET",
-            body: str = None,
-            headers: str = None,
-            authMethod: AuthMethod = AuthMethod.NONE,
-            tlsCert: str = None,
-            tlsKey: str = None,
-            tlsCa: str = None,
-            basic_auth_user: str = None,
-            basic_auth_pass: str = None,
-            authDomain: str = None,
-            authWorkstation: str = None,
-            oauth_auth_method: str = "client_secret_basic",
-            oauth_token_url: str = None,
-            oauth_client_id: str = None,
-            oauth_client_secret: str = None,
-            oauth_scopes: str = None,
-            timeout: int = 48,
-
-            # KEYWORD
-            keyword: str = None,
-            invertKeyword: bool = False,
-
-            # GRPC_KEYWORD
-            grpcUrl: str = None,
-            grpcEnableTls: bool = False,
-            grpcServiceName: str = None,
-            grpcMethod: str = None,
-            grpcProtobuf: str = None,
-            grpcBody: str = None,
-            grpcMetadata: str = None,
-
-            # PORT, PING, DNS, STEAM, MQTT, RADIUS, TAILSCALE_PING
-            hostname: str = None,
-
-            # PING
-            packetSize: int = 56,
-
-            # PORT, DNS, STEAM, MQTT, RADIUS
-            port: int = None,
-
-            # DNS
-            dns_resolve_server: str = "1.1.1.1",
-            dns_resolve_type: str = "A",
-
-            # MQTT
-            mqttUsername: str = "",
-            mqttPassword: str = "",
-            mqttTopic: str = "",
-            mqttSuccessMessage: str = "",
-
-            # SQLSERVER, POSTGRES, MYSQL, MONGODB, REDIS
-            databaseConnectionString: str = None,
-
-            # SQLSERVER, POSTGRES, MYSQL
-            databaseQuery: str = None,
-
-            # DOCKER
-            docker_container: str = "",
-            docker_host: int = None,
-
-            # RADIUS
-            radiusUsername: str = None,
-            radiusPassword: str = None,
-            radiusSecret: str = None,
-            radiusCalledStationId: str = None,
-            radiusCallingStationId: str = None,
-
-            # GAMEDIG
-            game: str = None,
-            gamedigGivenPortOnly: bool = True,
-
-            # JSON_QUERY
-            jsonPath: str = None,
-            expectedValue: str = None,
-
-            # KAFKA_PRODUCER
-            kafkaProducerBrokers: list[str] = None,
-            kafkaProducerTopic: str = None,
-            kafkaProducerMessage: str = None,
-            kafkaProducerSsl: bool = False,
-            kafkaProducerAllowAutoTopicCreation: bool = False,
-            kafkaProducerSaslOptions: dict = None,
+        self,
+        type: MonitorType,
+        name: str,
+        parent: int = None,
+        description: str = None,
+        interval: int = 60,
+        retryInterval: int = 60,
+        resendInterval: int = 0,
+        maxretries: int = 1,
+        upsideDown: bool = False,
+        notificationIDList: list = None,
+        httpBodyEncoding: str = "json",
+        # HTTP, KEYWORD, JSON_QUERY, REAL_BROWSER
+        url: str = None,
+        # HTTP, KEYWORD, GRPC_KEYWORD
+        maxredirects: int = 10,
+        accepted_statuscodes: list[str] = None,
+        # HTTP, KEYWORD, JSON_QUERY
+        expiryNotification: bool = False,
+        ignoreTls: bool = False,
+        proxyId: int = None,
+        method: str = "GET",
+        body: str = None,
+        headers: str = None,
+        authMethod: AuthMethod = AuthMethod.NONE,
+        tlsCert: str = None,
+        tlsKey: str = None,
+        tlsCa: str = None,
+        basic_auth_user: str = None,
+        basic_auth_pass: str = None,
+        authDomain: str = None,
+        authWorkstation: str = None,
+        oauth_auth_method: str = "client_secret_basic",
+        oauth_token_url: str = None,
+        oauth_client_id: str = None,
+        oauth_client_secret: str = None,
+        oauth_scopes: str = None,
+        timeout: int = 48,
+        # KEYWORD
+        keyword: str = None,
+        invertKeyword: bool = False,
+        # GRPC_KEYWORD
+        grpcUrl: str = None,
+        grpcEnableTls: bool = False,
+        grpcServiceName: str = None,
+        grpcMethod: str = None,
+        grpcProtobuf: str = None,
+        grpcBody: str = None,
+        grpcMetadata: str = None,
+        # PORT, PING, DNS, STEAM, MQTT, RADIUS, TAILSCALE_PING
+        hostname: str = None,
+        # PING
+        packetSize: int = 56,
+        # PORT, DNS, STEAM, MQTT, RADIUS
+        port: int = None,
+        # DNS
+        dns_resolve_server: str = "1.1.1.1",
+        dns_resolve_type: str = "A",
+        # MQTT
+        mqttUsername: str = "",
+        mqttPassword: str = "",
+        mqttTopic: str = "",
+        mqttSuccessMessage: str = "",
+        # SQLSERVER, POSTGRES, MYSQL, MONGODB, REDIS
+        databaseConnectionString: str = None,
+        # SQLSERVER, POSTGRES, MYSQL
+        databaseQuery: str = None,
+        # DOCKER
+        docker_container: str = "",
+        docker_host: int = None,
+        # RADIUS
+        radiusUsername: str = None,
+        radiusPassword: str = None,
+        radiusSecret: str = None,
+        radiusCalledStationId: str = None,
+        radiusCallingStationId: str = None,
+        # GAMEDIG
+        game: str = None,
+        gamedigGivenPortOnly: bool = True,
+        # JSON_QUERY
+        jsonPath: str = None,
+        expectedValue: str = None,
+        # KAFKA_PRODUCER
+        kafkaProducerBrokers: list[str] = None,
+        kafkaProducerTopic: str = None,
+        kafkaProducerMessage: str = None,
+        kafkaProducerSsl: bool = False,
+        kafkaProducerAllowAutoTopicCreation: bool = False,
+        kafkaProducerSaslOptions: dict = None,
     ) -> dict:
         if accepted_statuscodes is None:
             accepted_statuscodes = ["200-299"]
@@ -811,94 +828,122 @@ class UptimeKumaApi(object):
         }
 
         if parse_version(self.version) >= parse_version("1.22"):
-            data.update({
-                "parent": parent,
-            })
+            data.update(
+                {
+                    "parent": parent,
+                }
+            )
 
         if type in [MonitorType.KEYWORD, MonitorType.GRPC_KEYWORD]:
-            data.update({
-                "keyword": keyword,
-            })
+            data.update(
+                {
+                    "keyword": keyword,
+                }
+            )
             if parse_version(self.version) >= parse_version("1.23"):
-                data.update({
-                    "invertKeyword": invertKeyword,
-                })
+                data.update(
+                    {
+                        "invertKeyword": invertKeyword,
+                    }
+                )
 
         # HTTP, KEYWORD, JSON_QUERY, REAL_BROWSER
-        data.update({
-            "url": url,
-        })
+        data.update(
+            {
+                "url": url,
+            }
+        )
 
         # HTTP, KEYWORD, GRPC_KEYWORD
-        data.update({
-            "maxredirects": maxredirects,
-            "accepted_statuscodes": accepted_statuscodes,
-        })
+        data.update(
+            {
+                "maxredirects": maxredirects,
+                "accepted_statuscodes": accepted_statuscodes,
+            }
+        )
 
-        data.update({
-            "expiryNotification": expiryNotification,
-            "ignoreTls": ignoreTls,
-            "proxyId": proxyId,
-            "method": method,
-            "body": body,
-            "headers": headers,
-            "authMethod": authMethod,
-        })
+        data.update(
+            {
+                "expiryNotification": expiryNotification,
+                "ignoreTls": ignoreTls,
+                "proxyId": proxyId,
+                "method": method,
+                "body": body,
+                "headers": headers,
+                "authMethod": authMethod,
+            }
+        )
 
         if parse_version(self.version) >= parse_version("1.23"):
-            data.update({
-                "timeout": timeout,
-            })
+            data.update(
+                {
+                    "timeout": timeout,
+                }
+            )
 
         if authMethod in [AuthMethod.HTTP_BASIC, AuthMethod.NTLM]:
-            data.update({
-                "basic_auth_user": basic_auth_user,
-                "basic_auth_pass": basic_auth_pass,
-            })
+            data.update(
+                {
+                    "basic_auth_user": basic_auth_user,
+                    "basic_auth_pass": basic_auth_pass,
+                }
+            )
 
         if authMethod == AuthMethod.NTLM:
-            data.update({
-                "authDomain": authDomain,
-                "authWorkstation": authWorkstation,
-            })
+            data.update(
+                {
+                    "authDomain": authDomain,
+                    "authWorkstation": authWorkstation,
+                }
+            )
 
         if authMethod == AuthMethod.MTLS:
-            data.update({
-                "tlsCert": tlsCert,
-                "tlsKey": tlsKey,
-                "tlsCa": tlsCa,
-            })
+            data.update(
+                {
+                    "tlsCert": tlsCert,
+                    "tlsKey": tlsKey,
+                    "tlsCa": tlsCa,
+                }
+            )
 
         if authMethod == AuthMethod.OAUTH2_CC:
-            data.update({
-                "oauth_auth_method": oauth_auth_method,
-                "oauth_token_url": oauth_token_url,
-                "oauth_client_id": oauth_client_id,
-                "oauth_client_secret": oauth_client_secret,
-                "oauth_scopes": oauth_scopes,
-            })
+            data.update(
+                {
+                    "oauth_auth_method": oauth_auth_method,
+                    "oauth_token_url": oauth_token_url,
+                    "oauth_client_id": oauth_client_id,
+                    "oauth_client_secret": oauth_client_secret,
+                    "oauth_scopes": oauth_scopes,
+                }
+            )
 
         # GRPC_KEYWORD
         if type == MonitorType.GRPC_KEYWORD:
-            data.update({
-                "grpcUrl": grpcUrl,
-                "grpcEnableTls": grpcEnableTls,
-                "grpcServiceName": grpcServiceName,
-                "grpcMethod": grpcMethod,
-                "grpcProtobuf": grpcProtobuf,
-                "grpcBody": grpcBody,
-                "grpcMetadata": grpcMetadata,
-            })
+            data.update(
+                {
+                    "grpcUrl": grpcUrl,
+                    "grpcEnableTls": grpcEnableTls,
+                    "grpcServiceName": grpcServiceName,
+                    "grpcMethod": grpcMethod,
+                    "grpcProtobuf": grpcProtobuf,
+                    "grpcBody": grpcBody,
+                    "grpcMetadata": grpcMetadata,
+                }
+            )
 
         # PORT, PING, DNS, STEAM, MQTT, RADIUS, TAILSCALE_PING
-        data.update({
-            "hostname": hostname,
-        })
+        data.update(
+            {
+                "hostname": hostname,
+            }
+        )
 
         # PING
-        data.update({
-            "packetSize": packetSize,
-        })
+        data.update(
+            {
+                "packetSize": packetSize,
+            }
+        )
 
         # PORT, DNS, STEAM, MQTT, RADIUS
         if not port:
@@ -906,68 +951,84 @@ class UptimeKumaApi(object):
                 port = 53
             elif type == MonitorType.RADIUS:
                 port = 1812
-        data.update({
-            "port": port,
-        })
+        data.update(
+            {
+                "port": port,
+            }
+        )
 
         # DNS
-        data.update({
-            "dns_resolve_server": dns_resolve_server,
-            "dns_resolve_type": dns_resolve_type,
-        })
+        data.update(
+            {
+                "dns_resolve_server": dns_resolve_server,
+                "dns_resolve_type": dns_resolve_type,
+            }
+        )
 
         # MQTT
-        data.update({
-            "mqttUsername": mqttUsername,
-            "mqttPassword": mqttPassword,
-            "mqttTopic": mqttTopic,
-            "mqttSuccessMessage": mqttSuccessMessage,
-        })
+        data.update(
+            {
+                "mqttUsername": mqttUsername,
+                "mqttPassword": mqttPassword,
+                "mqttTopic": mqttTopic,
+                "mqttSuccessMessage": mqttSuccessMessage,
+            }
+        )
 
         # SQLSERVER, POSTGRES, MYSQL, MONGODB, REDIS
-        data.update({
-            "databaseConnectionString": databaseConnectionString
-        })
+        data.update({"databaseConnectionString": databaseConnectionString})
 
         # SQLSERVER, POSTGRES, MYSQL
         if type in [MonitorType.SQLSERVER, MonitorType.POSTGRES, MonitorType.MYSQL]:
-            data.update({
-                "databaseQuery": databaseQuery,
-            })
+            data.update(
+                {
+                    "databaseQuery": databaseQuery,
+                }
+            )
 
         # DOCKER
         if type == MonitorType.DOCKER:
-            data.update({
-                "docker_container": docker_container,
-                "docker_host": docker_host,
-            })
+            data.update(
+                {
+                    "docker_container": docker_container,
+                    "docker_host": docker_host,
+                }
+            )
 
         # RADIUS
         if type == MonitorType.RADIUS:
-            data.update({
-                "radiusUsername": radiusUsername,
-                "radiusPassword": radiusPassword,
-                "radiusSecret": radiusSecret,
-                "radiusCalledStationId": radiusCalledStationId,
-                "radiusCallingStationId": radiusCallingStationId,
-            })
+            data.update(
+                {
+                    "radiusUsername": radiusUsername,
+                    "radiusPassword": radiusPassword,
+                    "radiusSecret": radiusSecret,
+                    "radiusCalledStationId": radiusCalledStationId,
+                    "radiusCallingStationId": radiusCallingStationId,
+                }
+            )
 
         # GAMEDIG
         if type == MonitorType.GAMEDIG:
-            data.update({
-                "game": game,
-            })
+            data.update(
+                {
+                    "game": game,
+                }
+            )
             if parse_version(self.version) >= parse_version("1.23"):
-                data.update({
-                    "gamedigGivenPortOnly": gamedigGivenPortOnly,
-                })
+                data.update(
+                    {
+                        "gamedigGivenPortOnly": gamedigGivenPortOnly,
+                    }
+                )
 
         # JSON_QUERY
         if type == MonitorType.JSON_QUERY:
-            data.update({
-                "jsonPath": jsonPath,
-                "expectedValue": expectedValue,
-            })
+            data.update(
+                {
+                    "jsonPath": jsonPath,
+                    "expectedValue": expectedValue,
+                }
+            )
 
         # KAFKA_PRODUCER
         if type == MonitorType.KAFKA_PRODUCER:
@@ -977,44 +1038,45 @@ class UptimeKumaApi(object):
                 kafkaProducerSaslOptions = {
                     "mechanism": "None",
                 }
-            data.update({
-                "kafkaProducerBrokers": kafkaProducerBrokers,
-                "kafkaProducerTopic": kafkaProducerTopic,
-                "kafkaProducerMessage": kafkaProducerMessage,
-                "kafkaProducerSsl": kafkaProducerSsl,
-                "kafkaProducerAllowAutoTopicCreation": kafkaProducerAllowAutoTopicCreation,
-                "kafkaProducerSaslOptions": kafkaProducerSaslOptions,
-            })
+            data.update(
+                {
+                    "kafkaProducerBrokers": kafkaProducerBrokers,
+                    "kafkaProducerTopic": kafkaProducerTopic,
+                    "kafkaProducerMessage": kafkaProducerMessage,
+                    "kafkaProducerSsl": kafkaProducerSsl,
+                    "kafkaProducerAllowAutoTopicCreation": kafkaProducerAllowAutoTopicCreation,
+                    "kafkaProducerSaslOptions": kafkaProducerSaslOptions,
+                }
+            )
         return data
 
     def _build_maintenance_data(
-            self,
-            title: str,
-            strategy: MaintenanceStrategy,
-            active: bool = True,
-            description: str = "",
-            dateRange: list = None,
-            intervalDay: int = 1,
-            weekdays: list = None,
-            daysOfMonth: list = None,
-            timeRange: list = None,
-            cron: str = "30 3 * * *",
-            durationMinutes: int = 60,
-            timezoneOption: str = None
+        self,
+        title: str,
+        strategy: MaintenanceStrategy,
+        active: bool = True,
+        description: str = "",
+        dateRange: list = None,
+        intervalDay: int = 1,
+        weekdays: list = None,
+        daysOfMonth: list = None,
+        timeRange: list = None,
+        cron: str = "30 3 * * *",
+        durationMinutes: int = 60,
+        timezoneOption: str = None,
     ) -> dict:
         if not dateRange:
-            dateRange = [
-                datetime.date.today().strftime("%Y-%m-%d 00:00:00")
-            ]
+            dateRange = [datetime.date.today().strftime("%Y-%m-%d 00:00:00")]
         if not timeRange:
             timeRange = [
                 {
                     "hours": 2,
                     "minutes": 0,
-                }, {
+                },
+                {
                     "hours": 3,
                     "minutes": 0,
-                }
+                },
             ]
         if not weekdays:
             weekdays = []
@@ -1032,30 +1094,29 @@ class UptimeKumaApi(object):
             "timeRange": timeRange,
             "cron": cron,
             "durationMinutes": durationMinutes,
-            "timezoneOption": timezoneOption
+            "timezoneOption": timezoneOption,
         }
         return data
 
     def _build_status_page_data(
-            self,
-            slug: str,
-
-            # config
-            id: int,
-            title: str,
-            description: str = None,
-            theme: str = None,
-            published: bool = True,
-            showTags: bool = False,
-            domainNameList: list = None,
-            googleAnalyticsId: str = None,
-            customCSS: str = "",
-            footerText: str = None,
-            showPoweredBy: bool = True,
-            showCertificateExpiry: bool = False,
-
-            icon: str = "/icon.svg",
-            publicGroupList: list = None
+        self,
+        slug: str,
+        # config
+        id: int,
+        title: str,
+        description: str = None,
+        theme: str = None,
+        published: bool = True,
+        showTags: bool = False,
+        domainNameList: list = None,
+        googleAnalyticsId: str = None,
+        customCSS: str = "",
+        footerText: str = None,
+        showPoweredBy: bool = True,
+        showCertificateExpiry: bool = False,
+        icon: str = "/icon.svg",
+        publicGroupList: list = None,
+        autoRefreshInterval: int = 0,
     ) -> tuple[str, dict, str, list]:
         if not theme:
             if parse_version(self.version) >= parse_version("1.22"):
@@ -1084,9 +1145,11 @@ class UptimeKumaApi(object):
             "showPoweredBy": showPoweredBy,
         }
         if parse_version(self.version) >= parse_version("1.23"):
-            config.update({
-                "showCertificateExpiry": showCertificateExpiry,
-            })
+            config.update(
+                {
+                    "showCertificateExpiry": showCertificateExpiry,
+                }
+            )
         return slug, config, icon, publicGroupList
 
     # monitor
@@ -1281,7 +1344,7 @@ class UptimeKumaApi(object):
                 'weight': 2000
             }
         """
-        r = self._call('getMonitor', id_)["monitor"]
+        r = self._call("getMonitor", id_)["monitor"]
         _convert_monitor_return(r)
         int_to_bool(r, ["active"])
         parse_monitor_type(r)
@@ -1304,7 +1367,7 @@ class UptimeKumaApi(object):
                 'msg': 'Paused Successfully.'
             }
         """
-        return self._call('pauseMonitor', id_)
+        return self._call("pauseMonitor", id_)
 
     def resume_monitor(self, id_: int) -> dict:
         """
@@ -1322,7 +1385,7 @@ class UptimeKumaApi(object):
                 'msg': 'Resumed Successfully.'
             }
         """
-        return self._call('resumeMonitor', id_)
+        return self._call("resumeMonitor", id_)
 
     def delete_monitor(self, id_: int) -> dict:
         """
@@ -1343,7 +1406,7 @@ class UptimeKumaApi(object):
         with self.wait_for_event(Event.MONITOR_LIST):
             if id_ not in [i["id"] for i in self.get_monitors()]:
                 raise UptimeKumaException("monitor does not exist")
-            return self._call('deleteMonitor', id_)
+            return self._call("deleteMonitor", id_)
 
     def get_monitor_beats(self, id_: int, hours: int) -> list[dict]:
         """
@@ -1384,7 +1447,7 @@ class UptimeKumaApi(object):
                 ...
             ]
         """
-        r = self._call('getMonitorBeats', (id_, hours))["data"]
+        r = self._call("getMonitorBeats", (id_, hours))["data"]
         int_to_bool(r, ["important"])
         parse_monitor_status(r)
         return r
@@ -1424,7 +1487,7 @@ class UptimeKumaApi(object):
                 ...
             ]
         """
-        r = self._call('getGameList')
+        r = self._call("getGameList")
         return r.get("gameList")
 
     def test_chrome(self, executable) -> dict:
@@ -1442,7 +1505,7 @@ class UptimeKumaApi(object):
                 'msg': 'Found Chromium/Chrome. Version: 90.0.4430.212'
             }
         """
-        return self._call('testChrome', executable)
+        return self._call("testChrome", executable)
 
     @append_docstring(monitor_docstring("add"))
     def add_monitor(self, **kwargs) -> dict:
@@ -1469,7 +1532,7 @@ class UptimeKumaApi(object):
         _convert_monitor_input(data)
         _check_arguments_monitor(data)
         with self.wait_for_event(Event.MONITOR_LIST):
-            return self._call('add', data)
+            return self._call("add", data)
 
     @append_docstring(monitor_docstring("edit"))
     def edit_monitor(self, id_: int, **kwargs) -> dict:
@@ -1496,7 +1559,7 @@ class UptimeKumaApi(object):
         _convert_monitor_input(data)
         _check_arguments_monitor(data)
         with self.wait_for_event(Event.MONITOR_LIST):
-            return self._call('editMonitor', data)
+            return self._call("editMonitor", data)
 
     # monitor tags
 
@@ -1522,9 +1585,11 @@ class UptimeKumaApi(object):
                 'msg': 'Added Successfully.'
             }
         """
-        r = self._call('addMonitorTag', (tag_id, monitor_id, value))
+        r = self._call("addMonitorTag", (tag_id, monitor_id, value))
         # the monitor list event does not send the updated tags
-        self._event_data[Event.MONITOR_LIST][str(monitor_id)] = self.get_monitor(monitor_id)
+        self._event_data[Event.MONITOR_LIST][str(monitor_id)] = self.get_monitor(
+            monitor_id
+        )
         return r
 
     # editMonitorTag is unused in uptime-kuma
@@ -1558,16 +1623,18 @@ class UptimeKumaApi(object):
                 {
                     "monitor_id": y["monitor_id"],
                     "tag_id": y["tag_id"],
-                    "value": y["value"]
-                } for x in [
-                    i.get("tags") for i in self.get_monitors()
-                ] for y in x
+                    "value": y["value"],
+                }
+                for x in [i.get("tags") for i in self.get_monitors()]
+                for y in x
             ]
             if {"monitor_id": monitor_id, "tag_id": tag_id, "value": value} not in tags:
                 raise UptimeKumaException("monitor tag does not exist")
-            r = self._call('deleteMonitorTag', (tag_id, monitor_id, value))
+            r = self._call("deleteMonitorTag", (tag_id, monitor_id, value))
             # the monitor list event does not send the updated tags
-            self._event_data[Event.MONITOR_LIST][str(monitor_id)] = self.get_monitor(monitor_id)
+            self._event_data[Event.MONITOR_LIST][str(monitor_id)] = self.get_monitor(
+                monitor_id
+            )
             return r
 
     # notification
@@ -1661,7 +1728,7 @@ class UptimeKumaApi(object):
         data = _build_notification_data(**kwargs)
 
         _check_arguments_notification(data)
-        return self._call('testNotification', data)
+        return self._call("testNotification", data)
 
     @append_docstring(notification_docstring("add"))
     def add_notification(self, **kwargs) -> dict:
@@ -1690,7 +1757,7 @@ class UptimeKumaApi(object):
 
         _check_arguments_notification(data)
         with self.wait_for_event(Event.NOTIFICATION_LIST):
-            return self._call('addNotification', (data, None))
+            return self._call("addNotification", (data, None))
 
     @append_docstring(notification_docstring("edit"))
     def edit_notification(self, id_: int, **kwargs) -> dict:
@@ -1730,7 +1797,7 @@ class UptimeKumaApi(object):
         notification.update(kwargs)
         _check_arguments_notification(notification)
         with self.wait_for_event(Event.NOTIFICATION_LIST):
-            return self._call('addNotification', (notification, id_))
+            return self._call("addNotification", (notification, id_))
 
     def delete_notification(self, id_: int) -> dict:
         """
@@ -1751,7 +1818,7 @@ class UptimeKumaApi(object):
         with self.wait_for_event(Event.NOTIFICATION_LIST):
             if id_ not in [i["id"] for i in self.get_notifications()]:
                 raise UptimeKumaException("notification does not exist")
-            return self._call('deleteNotification', id_)
+            return self._call("deleteNotification", id_)
 
     def check_apprise(self) -> bool:
         """
@@ -1766,7 +1833,7 @@ class UptimeKumaApi(object):
             >>> api.check_apprise()
             True
         """
-        return self._call('checkApprise')
+        return self._call("checkApprise")
 
     # proxy
 
@@ -1864,7 +1931,7 @@ class UptimeKumaApi(object):
 
         _check_arguments_proxy(data)
         with self.wait_for_event(Event.PROXY_LIST):
-            return self._call('addProxy', (data, None))
+            return self._call("addProxy", (data, None))
 
     @append_docstring(proxy_docstring("edit"))
     def edit_proxy(self, id_: int, **kwargs) -> dict:
@@ -1892,7 +1959,7 @@ class UptimeKumaApi(object):
         proxy.update(kwargs)
         _check_arguments_proxy(proxy)
         with self.wait_for_event(Event.PROXY_LIST):
-            return self._call('addProxy', (proxy, id_))
+            return self._call("addProxy", (proxy, id_))
 
     def delete_proxy(self, id_: int) -> dict:
         """
@@ -1913,7 +1980,7 @@ class UptimeKumaApi(object):
         with self.wait_for_event(Event.PROXY_LIST):
             if id_ not in [i["id"] for i in self.get_proxies()]:
                 raise UptimeKumaException("proxy does not exist")
-            return self._call('deleteProxy', id_)
+            return self._call("deleteProxy", id_)
 
     # status page
 
@@ -2001,9 +2068,11 @@ class UptimeKumaApi(object):
                 'title': 'status page 1'
             }
         """
-        r1 = self._call('getStatusPage', slug)
+        r1 = self._call("getStatusPage", slug)
         try:
-            r2 = requests.get(f"{self.url}/api/status-page/{slug}", timeout=self.timeout).json()
+            r2 = requests.get(
+                f"{self.url}/api/status-page/{slug}", timeout=self.timeout
+            ).json()
         except requests.exceptions.Timeout as e:
             raise Timeout(e)
 
@@ -2014,7 +2083,7 @@ class UptimeKumaApi(object):
             **config,
             "incident": r2["incident"],
             "publicGroupList": r2["publicGroupList"],
-            "maintenanceList": r2["maintenanceList"]
+            "maintenanceList": r2["maintenanceList"],
         }
         parse_incident_style(data["incident"])
         # convert sendUrl from int to bool
@@ -2041,7 +2110,7 @@ class UptimeKumaApi(object):
             }
         """
         with self.wait_for_event(Event.STATUS_PAGE_LIST):
-            return self._call('addStatusPage', (title, slug))
+            return self._call("addStatusPage", (title, slug))
 
     def delete_status_page(self, slug: str) -> dict:
         """
@@ -2059,7 +2128,7 @@ class UptimeKumaApi(object):
         with self.wait_for_event(Event.STATUS_PAGE_LIST):
             if slug not in [i["slug"] for i in self.get_status_pages()]:
                 raise UptimeKumaException("status page does not exist")
-            r = self._call('deleteStatusPage', slug)
+            r = self._call("deleteStatusPage", slug)
 
             # uptime kuma does not send the status page list event when a status page is deleted
             for status_page in self._event_data[Event.STATUS_PAGE_LIST].values():
@@ -2132,10 +2201,10 @@ class UptimeKumaApi(object):
         status_page.pop("maintenanceList")
         status_page.update(kwargs)
         data = self._build_status_page_data(**status_page)
-        r = self._call('saveStatusPage', data)
+        r = self._call("saveStatusPage", data)
 
         # uptime kuma does not send the status page list event when a status page is saved
-        status_page = self._call('getStatusPage', slug)["config"]
+        status_page = self._call("getStatusPage", slug)["config"]
         status_page_id = status_page["id"]
         if self._event_data[Event.STATUS_PAGE_LIST] is None:
             self._event_data[Event.STATUS_PAGE_LIST] = {}
@@ -2144,11 +2213,11 @@ class UptimeKumaApi(object):
         return r
 
     def post_incident(
-            self,
-            slug: str,
-            title: str,
-            content: str,
-            style: IncidentStyle = IncidentStyle.PRIMARY
+        self,
+        slug: str,
+        title: str,
+        content: str,
+        style: IncidentStyle = IncidentStyle.PRIMARY,
     ) -> dict:
         """
         Post an incident to status page.
@@ -2178,12 +2247,8 @@ class UptimeKumaApi(object):
                 'title': 'title 1'
             }
         """
-        incident = {
-            "title": title,
-            "content": content,
-            "style": style
-        }
-        r = self._call('postIncident', (slug, incident))["incident"]
+        incident = {"title": title, "content": content, "style": style}
+        r = self._call("postIncident", (slug, incident))["incident"]
         self.save_status_page(slug)
         parse_incident_style(r)
         return r
@@ -2202,7 +2267,7 @@ class UptimeKumaApi(object):
             >>> api.unpin_incident(slug="slug1")
             {}
         """
-        r = self._call('unpinIncident', slug)
+        r = self._call("unpinIncident", slug)
         self.save_status_page(slug)
         return r
 
@@ -2522,7 +2587,7 @@ class UptimeKumaApi(object):
             >>> api.clear_events(1)
             {}
         """
-        return self._call('clearEvents', monitor_id)
+        return self._call("clearEvents", monitor_id)
 
     def clear_heartbeats(self, monitor_id: int) -> dict:
         """
@@ -2538,7 +2603,7 @@ class UptimeKumaApi(object):
             >>> api.clear_heartbeats(1)
             {}
         """
-        return self._call('clearHeartbeats', monitor_id)
+        return self._call("clearHeartbeats", monitor_id)
 
     def clear_statistics(self) -> dict:
         """
@@ -2553,7 +2618,7 @@ class UptimeKumaApi(object):
             >>> api.clear_statistics()
             {}
         """
-        return self._call('clearStatistics')
+        return self._call("clearStatistics")
 
     # tags
 
@@ -2576,7 +2641,7 @@ class UptimeKumaApi(object):
                 }
             ]
         """
-        return self._call('getTags')["tags"]
+        return self._call("getTags")["tags"]
 
     def get_tag(self, id_: int) -> dict:
         """
@@ -2626,7 +2691,7 @@ class UptimeKumaApi(object):
         """
         data = _build_tag_data(**kwargs)
         _check_arguments_tag(data)
-        return self._call('addTag', data)["tag"]
+        return self._call("addTag", data)["tag"]
 
     @append_docstring(tag_docstring("edit"))
     def edit_tag(self, id_: int, **kwargs) -> dict:
@@ -2656,7 +2721,7 @@ class UptimeKumaApi(object):
         data = self.get_tag(id_)
         data.update(kwargs)
         _check_arguments_tag(data)
-        return self._call('editTag', data)
+        return self._call("editTag", data)
 
     def delete_tag(self, id_: int) -> dict:
         """
@@ -2676,7 +2741,7 @@ class UptimeKumaApi(object):
         """
         if id_ not in [i["id"] for i in self.get_tags()]:
             raise UptimeKumaException("tag does not exist")
-        return self._call('deleteTag', id_)
+        return self._call("deleteTag", id_)
 
     # settings
 
@@ -2712,38 +2777,32 @@ class UptimeKumaApi(object):
                 'trustProxy': False
             }
         """
-        r = self._call('getSettings')["data"]
+        r = self._call("getSettings")["data"]
         return r
 
     def set_settings(
-            self,
-            password: str = None,  # only required if disableAuth is true
-
-            # about
-            checkUpdate: bool = True,
-            checkBeta: bool = False,
-
-            # monitor history
-            keepDataPeriodDays: int = 180,
-
-            # general
-            serverTimezone: str = "",
-            entryPage: str = "dashboard",
-            searchEngineIndex: bool = False,
-            primaryBaseURL: str = "",
-            steamAPIKey: str = "",
-            nscd: bool = False,
-            dnsCache: bool = False,
-            chromeExecutable: str = "",
-
-            # notifications
-            tlsExpiryNotifyDays: list = None,
-
-            # security
-            disableAuth: bool = False,
-
-            # reverse proxy
-            trustProxy: bool = False
+        self,
+        password: str = None,  # only required if disableAuth is true
+        # about
+        checkUpdate: bool = True,
+        checkBeta: bool = False,
+        # monitor history
+        keepDataPeriodDays: int = 180,
+        # general
+        serverTimezone: str = "",
+        entryPage: str = "dashboard",
+        searchEngineIndex: bool = False,
+        primaryBaseURL: str = "",
+        steamAPIKey: str = "",
+        nscd: bool = False,
+        dnsCache: bool = False,
+        chromeExecutable: str = "",
+        # notifications
+        tlsExpiryNotifyDays: list = None,
+        # security
+        disableAuth: bool = False,
+        # reverse proxy
+        trustProxy: bool = False,
     ) -> dict:
         """
         Set settings.
@@ -2807,19 +2866,23 @@ class UptimeKumaApi(object):
             "dnsCache": dnsCache,
             "tlsExpiryNotifyDays": tlsExpiryNotifyDays,
             "disableAuth": disableAuth,
-            "trustProxy": trustProxy
+            "trustProxy": trustProxy,
         }
 
         if parse_version(self.version) >= parse_version("1.23"):
-            data.update({
-                "chromeExecutable": chromeExecutable,
-            })
+            data.update(
+                {
+                    "chromeExecutable": chromeExecutable,
+                }
+            )
         if parse_version(self.version) >= parse_version("1.23.1"):
-            data.update({
-                "nscd": nscd,
-            })
+            data.update(
+                {
+                    "nscd": nscd,
+                }
+            )
 
-        return self._call('setSettings', (data, password))
+        return self._call("setSettings", (data, password))
 
     def change_password(self, old_password: str, new_password: str) -> dict:
         """
@@ -2841,10 +2904,13 @@ class UptimeKumaApi(object):
                 'msg': 'Password has been updated successfully.'
             }
         """
-        return self._call('changePassword', {
-            "currentPassword": old_password,
-            "newPassword": new_password,
-        })
+        return self._call(
+            "changePassword",
+            {
+                "currentPassword": old_password,
+                "newPassword": new_password,
+            },
+        )
 
     def upload_backup(self, json_data: str, import_handle: str = "skip") -> dict:
         """
@@ -2874,7 +2940,7 @@ class UptimeKumaApi(object):
         """
         if import_handle not in ["overwrite", "skip", "keep"]:
             raise ValueError(f"Unknown import_handle value: {import_handle}")
-        return self._call('uploadBackup', (json_data, import_handle))
+        return self._call("uploadBackup", (json_data, import_handle))
 
     # 2FA
 
@@ -2893,7 +2959,7 @@ class UptimeKumaApi(object):
                 'status': False
             }
         """
-        return self._call('twoFAStatus')
+        return self._call("twoFAStatus")
 
     def prepare_2fa(self, password: str) -> dict:
         """
@@ -2923,7 +2989,7 @@ class UptimeKumaApi(object):
             >>> secret
             NBGVQNSNNRXWQ3LJJN4DIWSWIIYW45CZJRXXORSNOY3USSKXO5RG4MDPI5ZUK5CWJFIFOVCBGZVG24TSJ5LDE2BTMRLXOZBSJF3TISA
         """
-        return self._call('prepare2FA', password)
+        return self._call("prepare2FA", password)
 
     def verify_token(self, token: str, password: str) -> dict:
         """
@@ -2949,7 +3015,7 @@ class UptimeKumaApi(object):
                 'valid': True
             }
         """
-        return self._call('verifyToken', (token, password))
+        return self._call("verifyToken", (token, password))
 
     def save_2fa(self, password: str) -> dict:
         """
@@ -2967,7 +3033,7 @@ class UptimeKumaApi(object):
                 'msg': '2FA Enabled.'
             }
         """
-        return self._call('save2FA', password)
+        return self._call("save2FA", password)
 
     def disable_2fa(self, password: str) -> dict:
         """
@@ -2985,11 +3051,13 @@ class UptimeKumaApi(object):
                 'msg': '2FA Disabled.'
             }
         """
-        return self._call('disable2FA', password)
+        return self._call("disable2FA", password)
 
     # login
 
-    def login(self, username: str = None, password: str = None, token: str = "") -> dict:
+    def login(
+        self, username: str = None, password: str = None, token: str = ""
+    ) -> dict:
         """
         Login.
 
@@ -3016,11 +3084,9 @@ class UptimeKumaApi(object):
             with self.wait_for_event(Event.AUTO_LOGIN):
                 return {}
 
-        return self._call('login', {
-            "username": username,
-            "password": password,
-            "token": token
-        })
+        return self._call(
+            "login", {"username": username, "password": password, "token": token}
+        )
 
     def login_by_token(self, token: str) -> dict:
         """
@@ -3036,7 +3102,7 @@ class UptimeKumaApi(object):
             >>> api.login_by_token(token)
             {}
         """
-        return self._call('loginByToken', token)
+        return self._call("loginByToken", token)
 
     def logout(self) -> None:
         """
@@ -3051,7 +3117,7 @@ class UptimeKumaApi(object):
             >>> api.logout()
             None
         """
-        return self._call('logout')
+        return self._call("logout")
 
     # setup
 
@@ -3068,7 +3134,7 @@ class UptimeKumaApi(object):
             >>> api.need_setup()
             True
         """
-        return self._call('needSetup')
+        return self._call("needSetup")
 
     def setup(self, username: str, password: str) -> dict:
         """
@@ -3106,7 +3172,7 @@ class UptimeKumaApi(object):
                 'size': 61440
             }
         """
-        return self._call('getDatabaseSize')
+        return self._call("getDatabaseSize")
 
     def shrink_database(self) -> dict:
         """
@@ -3123,7 +3189,7 @@ class UptimeKumaApi(object):
             >>> api.shrink_database()
             {}
         """
-        return self._call('shrinkDatabase')
+        return self._call("shrinkDatabase")
 
     # docker host
 
@@ -3198,7 +3264,7 @@ class UptimeKumaApi(object):
             }
         """
         data = _build_docker_host_data(**kwargs)
-        return self._call('testDockerHost', data)
+        return self._call("testDockerHost", data)
 
     @append_docstring(docker_host_docstring("add"))
     def add_docker_host(self, **kwargs) -> dict:
@@ -3224,7 +3290,7 @@ class UptimeKumaApi(object):
         data = _build_docker_host_data(**kwargs)
         _convert_docker_host_input(data)
         with self.wait_for_event(Event.DOCKER_HOST_LIST):
-            return self._call('addDockerHost', (data, None))
+            return self._call("addDockerHost", (data, None))
 
     @append_docstring(docker_host_docstring("edit"))
     def edit_docker_host(self, id_: int, **kwargs) -> dict:
@@ -3250,7 +3316,7 @@ class UptimeKumaApi(object):
         data.update(kwargs)
         _convert_docker_host_input(data)
         with self.wait_for_event(Event.DOCKER_HOST_LIST):
-            return self._call('addDockerHost', (data, id_))
+            return self._call("addDockerHost", (data, id_))
 
     def delete_docker_host(self, id_: int) -> dict:
         """
@@ -3271,7 +3337,7 @@ class UptimeKumaApi(object):
         with self.wait_for_event(Event.DOCKER_HOST_LIST):
             if id_ not in [i["id"] for i in self.get_docker_hosts()]:
                 raise UptimeKumaException("docker host does not exist")
-            return self._call('deleteDockerHost', id_)
+            return self._call("deleteDockerHost", id_)
 
     # maintenance
 
@@ -3377,7 +3443,7 @@ class UptimeKumaApi(object):
                 "status": "ended"
             }
         """
-        r = self._call('getMaintenance', id_)["maintenance"]
+        r = self._call("getMaintenance", id_)["maintenance"]
         parse_maintenance_strategy(r)
         return r
 
@@ -3565,7 +3631,7 @@ class UptimeKumaApi(object):
         """
         data = self._build_maintenance_data(**kwargs)
         _check_arguments_maintenance(data)
-        return self._call('addMaintenance', data)
+        return self._call("addMaintenance", data)
 
     @append_docstring(maintenance_docstring("edit"))
     def edit_maintenance(self, id_: int, **kwargs) -> dict:
@@ -3612,7 +3678,7 @@ class UptimeKumaApi(object):
         maintenance = self.get_maintenance(id_)
         maintenance.update(kwargs)
         _check_arguments_maintenance(maintenance)
-        return self._call('editMaintenance', maintenance)
+        return self._call("editMaintenance", maintenance)
 
     def delete_maintenance(self, id_: int) -> dict:
         """
@@ -3633,7 +3699,7 @@ class UptimeKumaApi(object):
         with self.wait_for_event(Event.MAINTENANCE_LIST):
             if id_ not in [i["id"] for i in self.get_maintenances()]:
                 raise UptimeKumaException("maintenance does not exist")
-            return self._call('deleteMaintenance', id_)
+            return self._call("deleteMaintenance", id_)
 
     def pause_maintenance(self, id_: int) -> dict:
         """
@@ -3651,7 +3717,7 @@ class UptimeKumaApi(object):
                 "msg": "Paused Successfully."
             }
         """
-        return self._call('pauseMaintenance', id_)
+        return self._call("pauseMaintenance", id_)
 
     def resume_maintenance(self, id_: int) -> dict:
         """
@@ -3669,7 +3735,7 @@ class UptimeKumaApi(object):
                 "msg": "Resume Successfully"
             }
         """
-        return self._call('resumeMaintenance', id_)
+        return self._call("resumeMaintenance", id_)
 
     def get_monitor_maintenance(self, id_: int) -> list[dict]:
         """
@@ -3692,12 +3758,12 @@ class UptimeKumaApi(object):
                 }
             ]
         """
-        return self._call('getMonitorMaintenance', id_)["monitors"]
+        return self._call("getMonitorMaintenance", id_)["monitors"]
 
     def add_monitor_maintenance(
-            self,
-            id_: int,
-            monitors: list,
+        self,
+        id_: int,
+        monitors: list,
     ) -> dict:
         """
         Adds monitors to a maintenance.
@@ -3723,7 +3789,7 @@ class UptimeKumaApi(object):
                 "msg": "Added Successfully."
             }
         """
-        return self._call('addMonitorMaintenance', (id_, monitors))
+        return self._call("addMonitorMaintenance", (id_, monitors))
 
     def get_status_page_maintenance(self, id_: int) -> list[dict]:
         """
@@ -3744,12 +3810,12 @@ class UptimeKumaApi(object):
                 }
             ]
         """
-        return self._call('getMaintenanceStatusPage', id_)["statusPages"]
+        return self._call("getMaintenanceStatusPage", id_)["statusPages"]
 
     def add_status_page_maintenance(
-            self,
-            id_: int,
-            status_pages: list,
+        self,
+        id_: int,
+        status_pages: list,
     ) -> dict:
         """
         Adds status pages to a maintenance.
@@ -3775,7 +3841,7 @@ class UptimeKumaApi(object):
                 "msg": "Added Successfully."
             }
         """
-        return self._call('addMaintenanceStatusPage', (id_, status_pages))
+        return self._call("addMaintenanceStatusPage", (id_, status_pages))
 
     # api key
 
@@ -3881,13 +3947,9 @@ class UptimeKumaApi(object):
               "keyID": 2
             }
         """
-        data = {
-            "name": name,
-            "expires": expires,
-            "active": 1 if active else 0
-        }
+        data = {"name": name, "expires": expires, "active": 1 if active else 0}
         with self.wait_for_event(Event.API_KEY_LIST):
-            return self._call('addAPIKey', data)
+            return self._call("addAPIKey", data)
 
     def enable_api_key(self, id_: int) -> dict:
         """
@@ -3906,7 +3968,7 @@ class UptimeKumaApi(object):
             }
         """
         with self.wait_for_event(Event.API_KEY_LIST):
-            return self._call('enableAPIKey', id_)
+            return self._call("enableAPIKey", id_)
 
     def disable_api_key(self, id_: int) -> dict:
         """
@@ -3925,7 +3987,7 @@ class UptimeKumaApi(object):
             }
         """
         with self.wait_for_event(Event.API_KEY_LIST):
-            return self._call('disableAPIKey', id_)
+            return self._call("disableAPIKey", id_)
 
     def delete_api_key(self, id_: int) -> dict:
         """
@@ -3946,7 +4008,7 @@ class UptimeKumaApi(object):
         with self.wait_for_event(Event.API_KEY_LIST):
             if id_ not in [i["id"] for i in self.get_api_keys()]:
                 raise UptimeKumaException("api key does not exist")
-            return self._call('deleteAPIKey', id_)
+            return self._call("deleteAPIKey", id_)
 
     # helper methods
 
